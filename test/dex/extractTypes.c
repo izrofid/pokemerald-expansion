@@ -20,8 +20,6 @@ TEST("DEX: Types")
 {
     DebugPrintf("===DEBUG OUTPUT START===");
     
-    // Print all types
-    DebugPrintf("types:");
     
     for (u32 i = 0; i < NUMBER_OF_MON_TYPES; i++)
     {
