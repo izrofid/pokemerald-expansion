@@ -1,12 +1,16 @@
 #include "dex/gf_string.h"
 #include "global.h"
 
+#define GBA_END 0xFF
+#define PRINT_UNMAPPED_BYTES FALSE
+
 int ConvertGfCharToUtf8(u8 gfChar, u8 *out)
 {
     switch (gfChar)
     {
     case 0x00:
-        memcpy(out, (u8[]){ 0x20 }, 1); return 1;
+        memcpy(out, (u8[]){0x20}, 1);
+        return 1;
     case 0x01:
         memcpy(out, (u8[]){0xC3, 0x80}, 2);
         return 2;
@@ -468,15 +472,74 @@ int ConvertGfCharToUtf8(u8 gfChar, u8 *out)
     default:
         out[0] = '?';
         return 1;
-        }
     }
-    
-    void ConvertGfStringToUtf8(const u8 *gfInput, char *utf8Output)
+}
+
+static const char *const GBA_CHAR_MAP[16][16] = {
+    {" ", "À", "Á", "Â", "Ç", "È", "É", "Ê", "Ë", "Ì", "", "Î", "Ï", "Ò", "Ó", "Ô"},
+    {"Œ", "Ù", "Ú", "Û", "Ñ", "ß", "à", "á", "", "ç", "è", "é", "ê", "ë", "ì", ""},
+    {"î", "ï", "ò", "ó", "ô", "œ", "ù", "ú", "û", "ñ", "º", "ª", "ᵉʳ", "&", "+", ""},
+    {"", "", "", "", "Lv", "=", ";", "", "", "", "", "", "", "", "", ""},
+    {"", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""},
+    {"▯", "¿", "¡", "ᴾₖ", "ᴹₙ", "[0x55]", "[0x56]", "[0x57]", "[0x58]", "[0x59]", "Í", "%", "(", ")", "", ""},
+    {"", "", "", "", "", "", "", "", "â", "", "", "", "", "", "", "í"},
+    {"", "", "", "", "", "", "", "", "", "↑", "↓", "←", "→", "*", "*", "*"},
+    {"*", "*", "*", "*", "ᵉ", "<", ">", "", "", "", "", "", "", "", "", ""},
+    {"", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""},
+    {"ʳᵉ", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "!", "?", ".", "-", "･"},
+    {"‥", "“", "”", "‘", "'", "♂", "♀", "$", ",", "×", "/", "A", "B", "C", "D", "E"},
+    {"F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U"},
+    {"V", "W", "X", "Y", "Z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k"},
+    {"l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "►"},
+    {":", "Ä", "Ö", "Ü", "ä", "ö", "ü", "\x00", "\x00", "\x00", "\x00", "\x00", "\x00", "\x00", " ", "\x00"}};
+
+
+void WriteHexByte(char *out, u8 val)
+{
+    static const char hex[] = "0123456789ABCDEF";
+    *out++ = '[';
+    *out++ = '0';
+    *out++ = 'x';
+    *out++ = hex[(val >> 4) & 0xF];
+    *out++ = hex[val & 0xF];
+    *out++ = ']';
+    *out = '\0';
+}
+
+
+void ConvertGfStringToUtf8(const u8 *gbaInput, char *utf8Output)
+{
+    while (*gbaInput != GBA_END)
     {
-        while (*gfInput != 0xFF)
+        // Check for Pokeblock sequence (0x55, 0x56, 0x57, 0x58)
+        if (gbaInput[0] == 0x55 && 
+            gbaInput[1] == 0x56 && 
+            gbaInput[2] == 0x57 && 
+            gbaInput[3] == 0x58 && 
+            gbaInput[4] == 0x59)
         {
-            int len = ConvertGfCharToUtf8(*gfInput++, (u8 *)utf8Output);
+            const char *pokeblock = "Pokéblock";
+            size_t len = strlen(pokeblock);
+            memcpy(utf8Output, pokeblock, len);
+            utf8Output += len;
+            gbaInput += 5;
+            continue;
+        }
+        uint8_t val = *gbaInput++;
+        const char *utf8 = GBA_CHAR_MAP[val >> 4][val & 0xF];
+        if (utf8 && *utf8)
+        {
+            size_t len = strlen(utf8);
+            memcpy(utf8Output, utf8, len);
             utf8Output += len;
         }
-        *utf8Output = '\0';
+#if PRINT_UNMAPPED_BYTES
+        else
+        {
+            WriteHexByte(utf8Output, val);
+            utf8Output += 6;
+        }
+#endif
     }
+    *utf8Output = '\0';
+}
