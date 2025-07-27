@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Optional, Tuple
 from config import OPTIONS
 from sprite_processors import PokemonSpriteProcessor, TrainerSpriteProcessor
+from utils import DefineParser, JsonProcessor, SpeciesPostProcessor
 import argparse
 
 
@@ -102,7 +103,7 @@ class DexPipeline:
                 yaml_data = yaml.safe_load(f)
 
             with open(self.json_output, "w") as f:
-                json.dump(yaml_data, f, indent=2)
+                json.dump(yaml_data, f, ensure_ascii=False, indent=2)
 
         except yaml.YAMLError as e:
             print(f"YAML parsing error: {e}")
@@ -146,6 +147,17 @@ class DexPipeline:
         """Check if the user provided options are valid"""
         return option.lower() in self.OPTIONS
 
+    def run_pre_processor(self, pre_processor: str | None = None) -> None:
+        """If specified, run pre processor"""
+        if pre_processor == "species":
+            processor = DefineParser(
+                self.project_root / "include/constants/species.h",
+                self.project_root / "dex_files/json",
+            )
+            processor.parse_defines()
+            const_to_num, num_to_const = processor.build_mappings()
+            processor.dump_json(const_to_num, num_to_const)
+
     def run_post_processor(self, post_processor: str | None = None) -> None:
         """Run post-processor if specified"""
         if post_processor == "sprite":
@@ -155,6 +167,21 @@ class DexPipeline:
         if post_processor == "trainer_sprite":
             processor = TrainerSpriteProcessor()
             processor.process_sprites()
+
+        if post_processor == "json":
+            processor = JsonProcessor(input_path=self.json_output)
+            processor.process()
+
+        if post_processor == "species":
+            # Load the JSON data
+            with open(self.json_output, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            # Run the species post processor
+            speciesData = SpeciesPostProcessor(data).process()
+            # Pass processed data directly to JsonProcessor if possible
+            processor = JsonProcessor(data=speciesData, filename="speciesData")
+            processor.process()
+
 
     def run_core_pipeline(self, option: str) -> None:
         """Run the core pipeline: make test -> YAML -> JSON"""
@@ -189,13 +216,11 @@ class DexPipeline:
 
 
 def main():
-    
+
     parser = argparse.ArgumentParser(description="Data extractor utility")
     parser.add_argument("option", help="Which pipeline option to run (or 'all')")
     parser.add_argument(
-        "-p", "--postprocess",
-        action="store_true",
-        help="Run post-processing step"
+        "-p", "--postprocess", action="store_true", help="Run post-processing step"
     )
 
     args = parser.parse_args()
@@ -204,13 +229,15 @@ def main():
 
     if option == "all":
         for opt in OPTIONS.keys():
-                pipeline = DexPipeline()
-                pipeline.run_core_pipeline(opt)
-                if args.postprocess:
-                    pipeline.run_post_processor(OPTIONS[option]["post_processor"])
+            pipeline = DexPipeline()
+            pipeline.run_pre_processor()
+            pipeline.run_core_pipeline(opt)
+            if args.postprocess:
+                pipeline.run_post_processor(OPTIONS[opt]["post_processor"])
 
     else:
         pipeline = DexPipeline()
+        pipeline.run_pre_processor(OPTIONS[option]["pre_processor"])
         pipeline.run_core_pipeline(option)
         if args.postprocess:
             pipeline.run_post_processor(OPTIONS[option]["post_processor"])

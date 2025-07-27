@@ -191,7 +191,3 @@ class SpriteProcessor:
                 return None
                 
         return sprite_data
-    
-    def process_sprites(self, target_ids=None):
-        """Process sprites - to be implemented by subclasses"""
-        raise NotImplementedError
