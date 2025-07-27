@@ -2,6 +2,7 @@
 #include "battle.h"
 #include "pokemon.h"
 #include "test/test.h"
+#include "dex/gf_string.h"
 #include "constants/abilities.h"
 
 bool32 MoveInLevelUpLearnset(u16 species, u16 move)
@@ -57,7 +58,9 @@ TEST("DEX: Pokemon")
         DebugPrintf("- speciesId: %u", i);
 
         // Print Name
-        DebugPrintf("  speciesName: %S", currSpecies->speciesName);
+        char nameBuf[256];
+        ConvertGfStringToUtf8(currSpecies->speciesName, nameBuf);
+        DebugPrintf("  speciesName: \"%s\"", nameBuf);
 
         // Print types
         {
