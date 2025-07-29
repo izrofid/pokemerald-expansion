@@ -228,9 +228,19 @@ def main():
     option = args.option
 
     if option == "all":
+        # Collect all unique pre-processors (excluding None)
+        preprocessors = set(
+            OPTIONS[opt]["pre_processor"]
+            for opt in OPTIONS.keys()
+            if OPTIONS[opt].get("pre_processor")
+        )
+        # Run all unique pre-processors first
+        for preproc in preprocessors:
+            pipeline = DexPipeline()
+            pipeline.run_pre_processor(preproc)
+        # Then run the core pipeline and post-processors for each option
         for opt in OPTIONS.keys():
             pipeline = DexPipeline()
-            pipeline.run_pre_processor()
             pipeline.run_core_pipeline(opt)
             if args.postprocess:
                 pipeline.run_post_processor(OPTIONS[opt]["post_processor"])
