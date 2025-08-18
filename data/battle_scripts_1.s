@@ -9743,6 +9743,19 @@ BattleScript_TargetAbilityStatRaiseRet_End:
 	copybyte gBattlerAttacker, sSAVED_BATTLER
 	return
 
+BattleScript_PhoenixDownUsed::
+	pause B_WAIT_TIME_SHORT
+	call BattleScript_AbilityPopUp
+	jumpifability BS_TARGET, ABILITY_NONE, BattleScript_PhoenixDownRemoved
+	waitmessage B_WAIT_TIME_LONG
+	tryfaintmon BS_TARGET
+	healthbarupdate BS_TARGET
+	datahpupdate BS_TARGET
+	printstring STRINGID_PHOENIXDOWN
+BattleScript_PhoenixDownRemoved:
+	tryfaintmon BS_TARGET
+	return	
+
 @@@ MAX MOVES @@@
 BattleScript_EffectMaxMove::
 	attackcanceler

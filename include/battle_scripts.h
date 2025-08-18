@@ -523,6 +523,7 @@ extern const u8 BattleScript_BoosterEnergyRet[];
 extern const u8 BattleScript_TeraShellDistortingTypeMatchups[];
 extern const u8 BattleScript_TeraFormChange[];
 extern const u8 BattleScript_SleepClausePreventsEnd[];
+extern const u8 BattleScript_PhoenixDownUsed[];
 
 // zmoves
 extern const u8 BattleScript_ZMoveActivateDamaging[];
