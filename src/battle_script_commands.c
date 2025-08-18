@@ -4312,9 +4312,9 @@ static void Cmd_tryfaintmon(void)
          && !(gAbsentBattlerFlags & (1u << battler))
          && !IsBattlerAlive(battler))
         {
-            gBattleMons[battler].ability = ABILITY_NONE;
             BattleScriptPush(gBattlescriptCurrInstr);
             gBattlescriptCurrInstr = BattleScript_PhoenixDownUsed;
+            gBattleMons[battler].ability = ABILITY_NONE;
             return;
         }
         if (cmd->battler == BS_ATTACKER)
