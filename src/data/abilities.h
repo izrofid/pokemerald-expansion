@@ -2534,7 +2534,7 @@ const struct Ability gAbilitiesInfo[ABILITIES_COUNT] =
     [ABILITY_PHOENIX_DOWN] =
     {
         .name = _("Phoenix Down"),
-        .description = COMPOUND_STRING("Revives to half health on first faint")
+        .description = COMPOUND_STRING("Revives to half health on first faint."),
         .aiRating = 8,
     },
 
