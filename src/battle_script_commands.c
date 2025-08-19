@@ -4308,13 +4308,21 @@ static void Cmd_tryfaintmon(void)
             gBattlescriptCurrInstr = BattleScript_NeutralizingGasExits;
             return;
         }
-        if (gBattleMons[battler].ability == ABILITY_PHOENIX_DOWN
+        if (CanUsePhoenixDown(battler)
          && !(gAbsentBattlerFlags & (1u << battler))
          && !IsBattlerAlive(battler))
         {
+
+            u32 newHp = gBattleMons[battler].maxHP / 2;
+            if (newHp == 0)
+                newHp = 1;
+
+            gBattleMoveDamage = -(s32)newHp;
+
+            gHitMarker &= ~HITMARKER_FAINTED(battler);
             BattleScriptPush(gBattlescriptCurrInstr);
             gBattlescriptCurrInstr = BattleScript_PhoenixDownUsed;
-            gBattleMons[battler].ability = ABILITY_NONE;
+            gBattleStruct->phoenixDownUsed |= (1u << (battler));
             return;
         }
         if (cmd->battler == BS_ATTACKER)

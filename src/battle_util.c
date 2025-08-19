@@ -12115,3 +12115,11 @@ bool32 HasWeatherEffect(void)
 
     return TRUE;
 }
+
+bool32 CanUsePhoenixDown(u32 battler)
+{
+    if(gBattleMons[battler].ability == ABILITY_PHOENIX_DOWN)
+        return !(gBattleStruct->phoenixDownUsed & (1u << (battler)));
+    else
+        return FALSE;
+}

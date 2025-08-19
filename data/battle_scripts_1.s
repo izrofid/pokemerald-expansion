@@ -9744,16 +9744,19 @@ BattleScript_TargetAbilityStatRaiseRet_End:
 	return
 
 BattleScript_PhoenixDownUsed::
-	pause B_WAIT_TIME_SHORT
-	call BattleScript_AbilityPopUp
-	jumpifability BS_TARGET, ABILITY_NONE, BattleScript_PhoenixDownRemoved
 	waitmessage B_WAIT_TIME_LONG
-	tryfaintmon BS_TARGET
+	playfaintcry BS_TARGET
+	pause B_WAIT_TIME_LONG
+	pause B_WAIT_TIME_LONG
+	dofaintanimation BS_TARGET
+	printstring STRINGID_TARGETFAINTED
+	call BattleScript_AbilityPopUpTarget
+	cleareffectsonfaint BS_TARGET
+	pause B_WAIT_TIME_MED
+	switchinanim BS_TARGET, FALSE
 	healthbarupdate BS_TARGET
 	datahpupdate BS_TARGET
-	printstring STRINGID_PHOENIXDOWN
-BattleScript_PhoenixDownRemoved:
-	tryfaintmon BS_TARGET
+	pause B_WAIT_TIME_LONG
 	return	
 
 @@@ MAX MOVES @@@
